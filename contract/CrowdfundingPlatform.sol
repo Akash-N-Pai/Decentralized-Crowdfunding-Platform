@@ -25,6 +25,7 @@ contract CrowdfundingPlatform {
         Milestone[] milestones;
         mapping(address => uint256) contributions;
         mapping(address => bool) refundsClaimed;
+        address[] contributors;  // Track contributor addresses
         uint256 contributorCount;
     }
 
@@ -77,12 +78,13 @@ contract CrowdfundingPlatform {
         require(campaign.totalContributed < campaign.targetAmount, "Campaign funding goal reached");
         require(campaign.status == CampaignStatus.Active, "Campaign is not active");
 
-        campaign.contributions[msg.sender] += msg.value;
-        campaign.totalContributed += msg.value;
-
-        if (campaign.contributions[msg.sender] == msg.value) {
+        if (campaign.contributions[msg.sender] == 0) {
+            campaign.contributors.push(msg.sender);  // Add contributor address
             campaign.contributorCount++;
         }
+
+        campaign.contributions[msg.sender] += msg.value;
+        campaign.totalContributed += msg.value;
 
         emit ContributionMade(_campaignId, msg.sender, msg.value);
     }
@@ -192,15 +194,7 @@ contract CrowdfundingPlatform {
 
     function getCampaignContributors(uint256 _campaignId) public view returns (address[] memory) {
         Campaign storage campaign = campaigns[_campaignId];
-        address[] memory contributors = new address[](campaign.contributorCount);
-        uint256 index = 0;
-        for (uint256 i = 0; i < campaignCounter; i++) {
-            if (campaign.contributions[i] > 0) {
-                contributors[index] = address(i);
-                index++;
-            }
-        }
-        return contributors;
+        return campaign.contributors;
     }
 
     function getTotalContributions(uint256 _campaignId) public view returns (uint256) {
@@ -208,3 +202,10 @@ contract CrowdfundingPlatform {
         return campaign.totalContributed;
     }
 }
+
+/*Explanation:
+Structs and Mappings: The contract uses structs for campaigns and milestones, with mappings to track contributions and milestone approvals.
+Core Functionalities: Functions for creating campaigns, contributing, approving milestones, claiming refunds, and finalizing campaigns have been implemented.
+View Functions: Functions for retrieving campaign details, milestone status, and contributor information are included.
+Events: Events are emitted for campaign creation, contributions, milestone approvals, fund releases, refunds, and campaign finalization.
+*/
