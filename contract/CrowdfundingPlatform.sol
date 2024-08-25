@@ -134,4 +134,77 @@ contract CrowdfundingPlatform {
         emit CampaignFinalized(_campaignId, campaign.status);
     }
 
+    // View functions
+
+    function getCampaignDetails(uint256 _campaignId) public view returns (
+        string memory name,
+        string memory description,
+        uint256 targetAmount,
+        uint256 totalContributed,
+        uint256 deadline,
+        address creator,
+        CampaignStatus status,
+        uint256 milestoneCount
+    ) {
+        Campaign storage campaign = campaigns[_campaignId];
+        return (
+            campaign.name,
+            campaign.description,
+            campaign.targetAmount,
+            campaign.totalContributed,
+            campaign.deadline,
+            campaign.creator,
+            campaign.status,
+            campaign.milestones.length
+        );
+    }
+
+    function getContributorInfo(uint256 _campaignId, address _contributor) public view returns (uint256 contribution, bool refundClaimed) {
+        Campaign storage campaign = campaigns[_campaignId];
+        return (
+            campaign.contributions[_contributor],
+            campaign.refundsClaimed[_contributor]
+        );
+    }
+
+    function getMilestoneStatus(uint256 _campaignId, uint256 _milestoneIndex) public view returns (
+        string memory description,
+        uint256 amount,
+        bool isApproved,
+        uint256 approvalCount
+    ) {
+        Milestone storage milestone = campaigns[_campaignId].milestones[_milestoneIndex];
+        return (
+            milestone.description,
+            milestone.amount,
+            milestone.isApproved,
+            milestone.approvalCount
+        );
+    }
+
+    function getAllCampaigns() public view returns (uint256[] memory) {
+        uint256[] memory campaignIds = new uint256[](campaignCounter);
+        for (uint256 i = 1; i <= campaignCounter; i++) {
+            campaignIds[i - 1] = i;
+        }
+        return campaignIds;
+    }
+
+    function getCampaignContributors(uint256 _campaignId) public view returns (address[] memory) {
+        Campaign storage campaign = campaigns[_campaignId];
+        address[] memory contributors = new address[](campaign.contributorCount);
+        uint256 index = 0;
+        for (uint256 i = 0; i < campaignCounter; i++) {
+            if (campaign.contributions[i] > 0) {
+                contributors[index] = address(i);
+                index++;
+            }
+        }
+        return contributors;
+    }
+
+    function getTotalContributions(uint256 _campaignId) public view returns (uint256) {
+        Campaign storage campaign = campaigns[_campaignId];
+        return campaign.totalContributed;
+    }
 }
